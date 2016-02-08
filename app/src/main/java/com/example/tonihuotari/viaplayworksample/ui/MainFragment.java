@@ -1,6 +1,5 @@
 package com.example.tonihuotari.viaplayworksample.ui;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -15,7 +14,8 @@ import android.widget.TextView;
 
 import com.example.tonihuotari.viaplayworksample.R;
 import com.example.tonihuotari.viaplayworksample.api.ApiCallback;
-import com.example.tonihuotari.viaplayworksample.api.ApiService;
+import com.example.tonihuotari.viaplayworksample.api.ViaApiService;
+import com.example.tonihuotari.viaplayworksample.db.DBPage;
 import com.example.tonihuotari.viaplayworksample.models.Page;
 import com.example.tonihuotari.viaplayworksample.models.Section;
 
@@ -45,18 +45,15 @@ public class MainFragment extends Fragment {
             @Override
             public void sectionSelected(int position) {
                 Log.d(TAG, "Clicked on: " + position);
+                Section section = mSections.get(position);
+                fetchSection(section);
             }
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(mAdapter);
 
-        String url = "https://content.viaplay.se/androidv2-se/film{?dtg}".replace("{?dtg}", "");
-        Uri uri = Uri.parse(url);
-
-        Log.d(TAG, "aSDASDASD: " + uri.getLastPathSegment());
-
-        fetchPages();
+        fetchRootPage();
 
         return view;
     }
@@ -73,12 +70,17 @@ public class MainFragment extends Fragment {
         mAdapter.notifyDataSetChanged();
     }
 
-    private void fetchPages() {
-        ApiService.getInstance().getPages(getContext(), new ApiCallback<Page>() {
+    private void fetchRootPage() {
+        ViaApiService.getRootPage(getContext(), new ApiCallback<Page>() {
             @Override
             public void onResponse(Page page) {
                 Log.d(TAG, "Successfully got pages");
-                renderPage(page);
+
+                DBPage.savePage(page, true);
+
+                Page loadedPage = DBPage.loadPage(page.getSectionId(), true);
+
+                renderPage(loadedPage);
             }
 
             @Override
@@ -86,6 +88,21 @@ public class MainFragment extends Fragment {
                 Log.d(TAG, "Failed to fetch pages");
             }
         });
+    }
+
+    private void fetchSection(Section section) {
+        ViaApiService.getSection(section, new ApiCallback<Page>() {
+            @Override
+            public void onResponse(Page page) {
+                Log.d(TAG, "Successfully got page");
+            }
+
+            @Override
+            public void onFailure() {
+                Log.d(TAG, "Failed to fetch section");
+            }
+        });
+
     }
 
 }

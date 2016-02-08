@@ -11,6 +11,15 @@ public class Section {
     private String name;
     private String templated;
 
+    public Section(String id, String title, String href, String type, String name, String templated) {
+        this.id = id;
+        this.title = title;
+        this.href = href;
+        this.type = type;
+        this.name = name;
+        this.templated = templated;
+    }
+
     public String getId() {
         return id;
     }
