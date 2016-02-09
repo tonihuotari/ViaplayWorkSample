@@ -18,7 +18,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         MainFragment fragment = new MainFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.main_content, fragment).commit();

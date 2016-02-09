@@ -58,7 +58,7 @@ public class SectionAdapter extends RecyclerView.Adapter<SectionAdapter.ViewHold
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView title, subtitle;
-        
+
         public ViewHolder(View itemView) {
             super(itemView);
 

@@ -3,6 +3,7 @@ package com.example.tonihuotari.viaplayworksample.api;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.tonihuotari.viaplayworksample.db.DBPage;
 import com.example.tonihuotari.viaplayworksample.models.Page;
 import com.example.tonihuotari.viaplayworksample.models.Section;
 import com.google.gson.Gson;
@@ -24,59 +25,50 @@ public class ViaApiService {
 
     private static final String TAG = ViaApiService.class.getSimpleName();
 
-    private static final boolean TEST = false;
+    private static ApiService mInstance;
 
-    public static ApiService mInstance;
+    public static synchronized ApiService getService() {
 
-    public static ApiService getService() {
+        if (mInstance == null) {
+            RestAdapter.Builder builder = new RestAdapter.Builder()
+                    .setEndpoint("https://content.viaplay.se/")
+                            //.setLogLevel(RestAdapter.LogLevel.FULL) //uncomment this for logs
+                    .setConverter(new GsonConverter(new Gson()));
 
-        //TODO make synchronized
-        if(mInstance == null) {
-                RestAdapter.Builder builder = new RestAdapter.Builder()
-                        .setEndpoint("https://content.viaplay.se/")
-                                //.setLogLevel(RestAdapter.LogLevel.FULL) //uncomment this for logs
-                        .setConverter(new GsonConverter(new Gson()));
+            RestAdapter restAdapter = builder.build();
 
-                RestAdapter restAdapter = builder.build();
-
-                mInstance = restAdapter.create(ApiService.class);
-            }
-            return mInstance;
-    }
-
-    public static void getRootPage(Context context, final ApiCallback<Page> cb) {
-
-        if(TEST) {
-            cb.onResponse(getMockedPages(context));
-        } else {
-            getService().getRootPage(new Callback<Page>() {
-                @Override
-                public void success(Page page, Response response) {
-                    Log.d(TAG, "Successfully fetched root page");
-                    cb.onResponse(page);
-                }
-
-                @Override
-                public void failure(RetrofitError error) {
-                    Log.d(TAG, "Failed to fetch root page");
-                    cb.onFailure();
-                }
-            });
+            mInstance = restAdapter.create(ApiService.class);
         }
+        return mInstance;
     }
 
-    public static void getSection(final Section section, final ApiCallback<Page> cb) {
-        getService().getSection(section.getLastPathSegmentOfHref(), new Callback<Page>() {
+    public static void getRootPage() {
+
+        getService().getRootPage(new Callback<Page>() {
+            @Override
+            public void success(Page page, Response response) {
+                Log.d(TAG, "Successfully fetched root page");
+                DBPage.savePage(page, true);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.d(TAG, "Failed to fetch root page");
+            }
+        });
+    }
+
+    public static void getSection(final String lastPathSegmentOfHref) {
+        getService().getSection(lastPathSegmentOfHref, new Callback<Page>() {
             @Override
             public void success(Page page, Response response) {
                 Log.d(TAG, "Successfully fetched section");
-                cb.onResponse(page);
+                DBPage.savePage(page, true);
             }
 
             @Override
             public void failure(RetrofitError error) {
                 Log.d(TAG, "Failed to fetched section");
-                cb.onFailure();
             }
         });
 
@@ -87,12 +79,13 @@ public class ViaApiService {
         try {
             String jsonString = readFile("response.json", context);
 
-            Type t = new TypeToken<Page>() {}.getType();
+            Type t = new TypeToken<Page>() {
+            }.getType();
             Page page = new Gson()
                     .fromJson(jsonString, t);
             return page;
         } catch (IOException e) {
-            Log.d(TAG, "Failed to load resopnse.json: " + e.getMessage());
+            Log.d(TAG, "Failed to load response.json: " + e.getMessage());
             e.printStackTrace();
         }
         return null;

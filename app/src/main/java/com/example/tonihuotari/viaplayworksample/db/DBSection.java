@@ -36,11 +36,11 @@ public class DBSection extends Model {
         this.name = section.getName();
     }
 
-    public Section toSection() {
+    Section toSection() {
         return new Section(id, title, href, type, name, templated);
     }
 
-    public static void saveSections(List<Section> sections) {
+    static void saveSections(List<Section> sections) {
         new Delete().from(DBSection.class).execute();
 
         for(Section section : sections) {
@@ -49,7 +49,7 @@ public class DBSection extends Model {
         }
     }
 
-    public static List<Section> loadSections() {
+    static List<Section> loadSections() {
         List<DBSection> dSections = new Select()
                 .from(DBSection.class)
                 .execute();
