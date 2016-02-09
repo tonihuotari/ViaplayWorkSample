@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +27,7 @@ import java.util.List;
 
 public class MainFragment extends Fragment {
 
-    private final static String TAG = MainFragment.class.getSimpleName();
+    public final static String TAG = MainFragment.class.getSimpleName();
 
     private List<Section> mSections = new ArrayList<>();
 
@@ -50,7 +51,7 @@ public class MainFragment extends Fragment {
 
                 getFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.main_content, frag)
+                        .replace(R.id.main_content, frag, SectionDetailsFragment.TAG)
                         .addToBackStack(null)
                         .commit();
             }
@@ -91,7 +92,9 @@ public class MainFragment extends Fragment {
         DBPage.loadPage(null, true, new DBCallback<Page>() {
             @Override
             public void onResult(Page page) {
-                renderPage(page);
+                if (isAdded() && page != null) {
+                    renderPage(page);
+                }
             }
 
             @Override
@@ -108,7 +111,7 @@ public class MainFragment extends Fragment {
     @Subscribe
     public void pageFetched(SyncBus.PageAvailableEvent event) {
         //Checking that event returned is actually root page (root page is is null)
-        if(event.isRootPage()) {
+        if (event.isRootPage()) {
             loadRootPage();
         }
     }

@@ -20,7 +20,10 @@ import com.squareup.otto.Subscribe;
 
 public class SectionDetailsFragment extends Fragment {
 
-    private final static String TAG = SectionDetailsFragment.class.getSimpleName();
+    public final static String TAG = SectionDetailsFragment.class.getSimpleName();
+
+    private final static String B_SECTION_ID = "SectionId";
+    private final static String B_LAST_PATH_SEGMENT_OF_HREF = "LastPathSegmentOfHref";
 
     private String mSectionId;
     private String mLastPathSegmentOfHref;
@@ -30,6 +33,7 @@ public class SectionDetailsFragment extends Fragment {
 
     public static SectionDetailsFragment newInstance(String sectionId, String lastPathSegmentOfHref) {
         SectionDetailsFragment frag = new SectionDetailsFragment();
+
         frag.mSectionId = sectionId;
         frag.mLastPathSegmentOfHref = lastPathSegmentOfHref;
 
@@ -44,11 +48,24 @@ public class SectionDetailsFragment extends Fragment {
         mTitle = (TextView) view.findViewById(R.id.section_details_title);
         mDescription = (TextView) view.findViewById(R.id.section_details_description);
 
-        loadPage();
         if (savedInstanceState == null) {
             fetchSection(mLastPathSegmentOfHref);
+        } else {
+            mSectionId = savedInstanceState.getString(B_SECTION_ID);
+            mLastPathSegmentOfHref = savedInstanceState.getString(B_LAST_PATH_SEGMENT_OF_HREF);
         }
+
+        loadPage();
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString(B_SECTION_ID, mSectionId);
+        outState.putString(B_LAST_PATH_SEGMENT_OF_HREF, mLastPathSegmentOfHref);
+
     }
 
     @Override
@@ -64,7 +81,6 @@ public class SectionDetailsFragment extends Fragment {
     }
 
     private void renderSection(Page page) {
-
         mTitle.setText(page.getTitle());
         mDescription.setText(page.getDescription());
     }
@@ -73,7 +89,9 @@ public class SectionDetailsFragment extends Fragment {
         DBPage.loadPage(mSectionId, false, new DBCallback<Page>() {
             @Override
             public void onResult(Page section) {
-                renderSection(section);
+                if (isAdded() && section != null) {
+                    renderSection(section);
+                }
             }
 
             @Override
